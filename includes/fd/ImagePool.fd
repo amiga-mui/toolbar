@@ -1,0 +1,6 @@
+##base _ImagePoolBase
+##bias 30
+IP_RequestImageTags(name,tags)(a0,a1)
+IP_FreeImage(bitmap)(a0)
+IP_DebugInfo(handler)(a0)
+##end

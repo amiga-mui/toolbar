@@ -1,0 +1,38 @@
+/***************************************************************************
+
+ Toolbar MCC - MUI Custom Class for Toolbar handling
+ Copyright (C) 1997-2000 Benny Kjær Nielsen <floyd@amiga.dk>
+ Copyright (C) 2004-2005 by Toolbar.mcc Open Source Team
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ Toolbar class Support Site:  http://www.sf.net/projects/toolbar-mcc
+
+ $Id$
+
+***************************************************************************/
+
+With full permission of the previous author (Benny Kjær Nielsen) Toolbar.mcc
+15.7+ is hereby released as free software under the GNU Lesser General Public
+License. Please read this license (COPYING) and make sure you understand the
+terms and conditions of this license.
+
+Toolbar.mcc is compiled with GCC v2 and v3 compilers. All required
+third party header files should already be included in the CVS repository.
+However, please note that you might need some more third party tools/utilities
+not included/listed here.
+
+If you want to contribute to the development of Toolbar.mcc please register
+with SourceForge.net and notify one of the project admins of the Toolbar.mcc
+project available at http://www.sf.net/projects/toolbar-mcc
+
+Jens Langner
+February, 2003
