@@ -1,0 +1,119 @@
+TABLE OF CONTENTS
+
+InfoText.mcc/InfoText.mcc
+InfoText.mcc/MUIA_InfoText_Contents
+InfoText.mcc/MUIA_InfoText_ExpirationPeriod
+InfoText.mcc/MUIA_InfoText_FallBackText
+InfoText.mcc/MUIM_InfoText_TimeOut
+InfoText.mcc/InfoText.mcc
+
+This is simply a subclass of Text.mui which features a fancy border. This is
+especially useful for a class such as Toolbar.mcc (see the example code in
+the Toolbar.mcc distribution archive), but can also be used for other
+purposes.
+
+It is VERY important to notice that the class is a subclass of Text.mui.
+This means that all the attributes described in the autodoc "MUI_Text.doc"
+can be used with this class as well.
+
+InfoText.mcc is naturally freeware. You can use it in whatever you like even
+commercial programs. Unfortunately I do not know who originally created the
+graphics (the fancy letter 'i'), but I hope he/she doesn't mind that I have
+used it in this class.
+
+InfoText.mcc/MUIA_InfoText_Contents
+
+    NAME
+	MUIA_InfoText_Contents -- [.SG], STRPTR
+
+    FUNCTION
+	This attribute has almost the same effect as the normal
+	MUIA_Text_Contents. The only difference is that this attribute
+	has a timeout feature. This means that the text is cleared after
+	a certain period of time. You can adjust this period with the attribute
+	MUIA_InfoText_ExpirationPeriod.
+
+	This extra feature is especially useful when some kind of error-text
+	needs to be displayed.
+
+    EXAMPLE
+	/* It works just as the normal text attribute */
+	set(info_obj, MUIA_InfoText_Contents, "Error: Intel Inside");
+
+    NOTES
+	Please note that you can use all the attributes which
+	are available in the standard text class.
+
+    BUGS
+	No known bugs.
+
+    SEE ALSO
+	MUIA_InfoText_ExpirationPeriod, MUI_Text.doc
+	
+InfoText.mcc/MUIA_InfoText_ExpirationPeriod
+
+    NAME
+	MUIA_InfoText_ExpirationPeriod -- [ISG], ULONG
+
+    FUNCTION
+	With this attribute you can set the period of expiration for the
+	MUIA_InfoText_Contents attribute. The argument is in milliseconds
+	and the default is 4000.
+
+    NOTES
+
+    BUGS
+	No known bugs.
+
+    SEE ALSO
+	MUIA_InfoText_Contents
+	
+InfoText.mcc/MUIA_InfoText_FallBackText
+
+    NAME
+	MUIA_InfoText_FallBackText -- [ISG], STRPTR
+
+    FUNCTION
+	With this attribute you can specify a text that should be displayed
+	when there is no text specified with MUIA_Text_Contents or
+	MUIA_InfoText_Contents.
+
+	An example might be the best way to illustrate the idea.
+
+	Instruction                                        Displayed
+	-------------------------------------------------+------------
+	set(obj, MUIA_Text_Contents,         "Hello"  )  |  Hello
+	set(obj, MUIA_InfoText_FallBackText, "Default")  |  Hello
+	set(obj, MUIA_Text_Contents,         NULL     )  |  Default
+	set(obj, MUIA_Text_Contents,         "Hello2" )  |  Hello2
+	set(obj, MUIA_Text_Contents,         NULL     )  |  Default
+
+    NOTES
+
+    BUGS
+	No known bugs.
+
+    SEE ALSO
+	MUIA_InfoText_Contents
+	
+InfoText.mcc/MUIM_InfoText_TimeOut
+
+    NAME
+	MUIM_InfoText_TimeOut
+
+    FUNCTION
+	With this method you can force the text to timeout. The text is
+	always 'cleared' when this method is used even if the attribute
+	MUIA_InfoText_Contents hasn't been used earlier.
+
+	If a fallback text is defined this will be used instead of a blank
+	line.
+
+    NOTES
+
+    BUGS
+	No known bugs.
+
+    SEE ALSO
+	MUIA_InfoText_Contents
+
