@@ -5,6 +5,10 @@ MUI Toolbar MCC class - ChangeLog
 $Id$
 $Source$
 
+2005-07-19  Jens Langner <Jens.Langner@light-speed.de>
+
+    * mcc: minor cosmetic code changes.
+	 
 2005-07-07  Jens Langner <Jens.Langner@light-speed.de>
 
     * initial LGPL release published at sf.net

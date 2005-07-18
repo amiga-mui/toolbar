@@ -52,6 +52,7 @@
 #include "InstanceData.h"
 #include "ConfigValues.h"
 #include "Draw.h" // TB_
+#include "muiextra.h"
 
 #ifdef USE_IMAGEPOOL
 extern struct Library *ImagePoolBase;
@@ -253,11 +254,15 @@ ULONG Toolbar_Setup(struct IClass *cl, Object *obj, Msg msg)
 
   if (!(DoSuperMethodA(cl, obj, msg)))
     return(FALSE);
+
   // Setup an event-handler
-  data->EHNode.ehn_Object = obj;
-  data->EHNode.ehn_Class  = cl;
-  data->EHNode.ehn_Events = IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_RAWKEY;
-   DoMethod(_win(obj),MUIM_Window_AddEventHandler,&data->EHNode);
+  data->EHNode.ehn_Priority = 0;
+  data->EHNode.ehn_Flags    = MUI_EHF_GUIMODE;
+  data->EHNode.ehn_Object   = obj;
+  data->EHNode.ehn_Class    = cl;
+  data->EHNode.ehn_Events   = IDCMP_MOUSEBUTTONS | IDCMP_RAWKEY | IDCMP_MOUSEMOVE;
+  DoMethod(_win(obj), MUIM_Window_AddEventHandler, &data->EHNode);
+
   // Should we show the tooltext? ...the images?
   data->ToolImages = data->ToolTexts = TRUE; // Default
   switch(GetConfigItem(obj, MUICFG_Toolbar_ToolbarLook, LOOK_IMAGE_TEXT))

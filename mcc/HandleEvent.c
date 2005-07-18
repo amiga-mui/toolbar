@@ -37,6 +37,8 @@
 #include "Dispatcher.h"
 #include "Draw.h"
 
+#include "Debug.h"
+
 //static BOOL SUSPEND = FALSE;
 
 /* TODO:
@@ -67,7 +69,7 @@ VOID Exclude(struct Toolbar_Data *data, ULONG exclude)
   }
 }
 
-UBYTE ConvertKey (struct IntuiMessage *imsg)
+static unsigned char ConvertKey (struct IntuiMessage *imsg)
 {
   unsigned char ascii = 0;
   struct InputEvent event;
@@ -194,7 +196,7 @@ BOOL Released (Object *obj, struct Toolbar_Data *data, UWORD qualifier)
 
 ULONG Toolbar_HandleEvent(struct IClass *cl,Object *obj,struct MUIP_HandleEvent *msg)
 {
-  LONG result = 0;
+  ULONG result = 0;
 
 /*  if(SUSPEND)
     return(NULL);*/
@@ -208,9 +210,9 @@ ULONG Toolbar_HandleEvent(struct IClass *cl,Object *obj,struct MUIP_HandleEvent 
   if(xget(obj, MUIA_Disabled)) // Should keep a flag in the instance data instead...
     return(0); // WRONG - must DoMethod...
 
-  if (msg->imsg && data->Active)
+  if(msg->imsg && data->Active)
   {
-    switch (msg->imsg->Class)
+    switch(msg->imsg->Class)
     {
       case IDCMP_RAWKEY:
       {
@@ -432,5 +434,5 @@ SUSPEND = TRUE;
     }
   }
 
-  return result ? result : (LONG)DoSuperMethodA(cl, obj, (Msg)msg);
+  return result ? result : DoSuperMethodA(cl, obj, (Msg)msg);
 }
