@@ -5,6 +5,8 @@ MUI Toolbar MCC class - ChangeLog
 $Id$
 $Source$
 
+#### v15.12 RELEASE ############################################################
+
 2005-07-19  Jens Langner <Jens.Langner@light-speed.de>
 
     * mcc: minor cosmetic code changes.

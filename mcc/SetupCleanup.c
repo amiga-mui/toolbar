@@ -146,7 +146,7 @@ BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, str
           if((buffer = AllocVec(max_length*sizeof(char), MEMF_CLEAR)))
           {
             strcpy(buffer, data->Path);
-            if(AddPart(buffer, (STRPTR)src_data, max_length))
+            if(AddPart((unsigned char *)buffer, (STRPTR)src_data, max_length))
               src_data = buffer;
           }
         }
