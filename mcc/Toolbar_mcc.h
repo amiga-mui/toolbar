@@ -37,7 +37,13 @@
 #define BKN_SERIAL 0xfcf70000
 #endif
 
-#include "amiga-align.h"
+#if defined(__PPC__)
+  #if defined(__GNUC__)
+    #pragma pack(2)
+  #elif defined(__VBCC__)
+    #pragma amiga-align
+  #endif
+#endif
 
 /*** MUI Defines ***/
 
@@ -158,6 +164,12 @@ struct MUIP_Toolbar_Description
 #define Toolbar_Space                        { TDT_SPACE,  NULL, NULL,  NULL, NULL, NULL}
 #define Toolbar_End                          { TDT_END,    NULL, NULL,  NULL, NULL, NULL}
 
-#include "default-align.h"
+#if defined(__PPC__)
+  #if defined(__GNUC__)
+    #pragma pack()
+  #elif defined(__VBCC__)
+    #pragma default-align
+  #endif
+#endif
 
 #endif /* TOOLBAR_MCC_H */
