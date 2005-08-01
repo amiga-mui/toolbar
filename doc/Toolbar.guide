@@ -1,15 +1,15 @@
 @DataBase Toolbar.guide
-@Author Benny Kjær Nielsen <benny@diku.dk>
+@Author Toolbar.mcc Open Source Team
 @WordWrap
-@$VER: Toolbar.guide V1.5 (27.07.2004)
+@$VER: Toolbar.guide V1.6 (01.08.2005)
 
 @Node Main "Toolbar - AmigaGuide documentation"
 
 @{JCenter}
 @{FG Highlight}@{b}The Toolbar class for MUI@{ub}@{FG Text}
 
-@{FG Highlight}Toolbar.mcc  Version 15.11 © 1997-2004@{FG Text}
-@{FG Highlight}Toolbar.mcp  Version 15.11 © 1997-2004@{FG Text}
+@{FG Highlight}Toolbar.mcc  Version 15.12 © 1997-2005@{FG Text}
+@{FG Highlight}Toolbar.mcp  Version 15.12 © 1997-2005@{FG Text}
 @{FG Highlight}InfoText.mcc Version 15.3  © 1997-1998@{FG Text}
 
 Programmed by
@@ -172,6 +172,11 @@ There are a few points that you should take especially care with.
 @{LIndent 5}
 
 @{b}History of Toolbar.mcc@{ub}
+
+Version 15.12+
+
+Please check the supplied "ChangeLog" file for a detailed list of changes
+since the last release!
 
 Version 15.11 (27-Jul-04) <Jens.Langner@light-speed.de>
 - fixed some gcc v3 dependent compiler warnings. (The AmigaOS4 build is now
