@@ -20,12 +20,8 @@
 
 ***************************************************************************/
 
-// ANSI
-#include <string.h>
-
 // Protos
 #include <clib/alib_protos.h>
-#include <proto/locale.h>
 #include <proto/muimaster.h>
 #include <proto/intuition.h>
 #include <proto/exec.h>
@@ -39,36 +35,8 @@
 #include "InstanceData.h"
 #include "CreatePrefs.h"
 
-// add a replacemnet define for the standard sprintf
-#define sprintf MySPrintf
-
-#if defined(__amigaos4__) || defined(__MORPHOS__)
-static int STDARGS VARARGS68K MySPrintf(char *buf, char *fmt, ...)
-{
-  VA_LIST args;
-
-  VA_START(args, fmt);
-  RawDoFmt(fmt, VA_ARG(args, void *), NULL, buf);
-  VA_END(args);
-
-  return(strlen(buf));
-}
-#else
-static int STDARGS MySPrintf(char *buf, char *fmt,...)
-{
-  static const UWORD PutCharProc[2] = {0x16C0,0x4E75};
-  /* dirty hack to avoid assembler part :-)
-    16C0: move.b d0,(a3)+
-     4E75: rts */
-  va_list args;
-
-  va_start(args, fmt);
-  RawDoFmt(fmt, args, (APTR)PutCharProc, buf);
-  va_end(args);
-
-  return(strlen(buf));
-}
-#endif
+#define ABOUTTEXT \
+  "\033cToolbar.mcc Version " LIB_REV_STRING " (" LIB_DATE ")\n" LIB_COPYRIGHT
 
 Object *CreatePrefs(struct Toolbar_DataP *data)
 {
@@ -81,7 +49,6 @@ Object *CreatePrefs(struct Toolbar_DataP *data)
   static STRPTR SelectionModeStrings[4];
   static STRPTR PrecisionStrings[5];
   static STRPTR GhostEffectStrings[5];
-  static char AboutText[300];
 
   BorderTypeStrings[0] = LOCALE(MSG_BORDERTYPE_OLD, "Old");
   BorderTypeStrings[1] = LOCALE(MSG_BORDERTYPE_OFF, "Off");
@@ -109,8 +76,6 @@ Object *CreatePrefs(struct Toolbar_DataP *data)
   GhostEffectStrings[1] = LOCALE(MSG_HEAVY,       "Heavy Grid");
   GhostEffectStrings[2] = LOCALE(MSG_SUPERLIGHT,  "Superlight Grid");
   GhostEffectStrings[3] = NULL;
-
-  sprintf(AboutText, "\033cToolbar.mcc Version %s (%s)\n%s", LIB_REV_STRING, LIB_DATE, LIB_COPYRIGHT);
 
   prefsgroup =
     VGroup,
@@ -329,7 +294,7 @@ Object *CreatePrefs(struct Toolbar_DataP *data)
         TextFrame,
         MUIA_Background, MUII_TextBack,
         MUIA_FixHeightTxt, "\n\n",
-        MUIA_Text_Contents, AboutText,
+        MUIA_Text_Contents, ABOUTTEXT,
       End,
     End;
 
