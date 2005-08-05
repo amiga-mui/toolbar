@@ -29,8 +29,8 @@ MKDIR = mkdir
 CP    = cp
 
 # Directories
-OBJDIR    = .obj_os3
-BINDIR    = bin_os3
+OBJDIR = .obj_os3
+BINDIR = bin_os3
 
 # Compiler/Linker flags
 CPU      = -m68020-60
@@ -41,13 +41,13 @@ WARN     = -Wall -W
 OPTFLAGS = -O3 -fomit-frame-pointer -msmall-code -funroll-loops
 DEBUG    = -DDEBUG -g -O0
 REDEFINE =
-CFLAGS   = -noixemul -I. -I../includes $(CPU) $(CPUFLAGS) $(WARN)\
+CFLAGS   = -noixemul -I. -I../includes $(CPU) $(CPUFLAGS) $(WARN) \
            $(OPTFLAGS) $(DEBUG) $(REDEFINE) -c
 LDFLAGS  = -noixemul -nostartfiles
 LDLIBS   = -lmui -ldebug
 
 # CPU and DEBUG can be defined outside, defaults to above
-# using e.g. "make DEBUG= CPU=-mcpu=603e" produces optimized non-debug PPC-603e version
+# using e.g. "make DEBUG= CPU=-m68060" produces optimized non-debug 68060 version
 #
 # OPTFLAGS are disabled by DEBUG normally!
 #
