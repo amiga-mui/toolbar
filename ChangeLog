@@ -5,6 +5,13 @@ MUI Toolbar MCC class - ChangeLog
 $Id$
 $Source$
 
+2005-08-05  Gunther Nikl <gni@gecko.de>
+
+    * mcc/library.c: Remove superfluous include statements.
+    * mcp/library.c: Likewise.
+    * mcp/CreatePrefs.c/CreatePrefs: Generate ABOUTTEXT with preprocessor.
+    * mcp/Makefile.os3: Minor changes.
+
 2005-08-03  Jens Langner <Jens.Langner@light-speed.de>
 
     * Debug.c,h: fixed incorrect use of KPutFmt() on MorphOS machines in
