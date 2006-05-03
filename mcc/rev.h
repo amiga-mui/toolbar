@@ -21,10 +21,10 @@
 ***************************************************************************/
 
 #define LIB_VERSION    15
-#define LIB_REVISION   12
+#define LIB_REVISION   13
 
-#define LIB_REV_STRING "15.12"
-#define LIB_DATE       "01.08.2005"
+#define LIB_REV_STRING "15.13"
+#define LIB_DATE       "28.04.2006"
 
 #if defined(__PPC__)
   #if defined(__MORPHOS__)
@@ -44,4 +44,4 @@
   #define CPU ""
 #endif
 
-#define LIB_COPYRIGHT  "Copyright (c) 2004-2005 Toolbar.mcc Open Source Team"
+#define LIB_COPYRIGHT  "Copyright (c) 2004-2006 Toolbar.mcc Open Source Team"

@@ -5,6 +5,15 @@ MUI Toolbar MCC class - ChangeLog
 $Id$
 $Source$
 
+2006-05-03  Jens Langner <Jens.Langner@light-speed.de>
+
+    * Draw.c: added own MyBltMaskBitMapRastPort() function to support blitting
+      of interleaved bitmap data as well.
+    * Debug.c,h: removed the need to link against -ldebug on OS4 and replaced
+      the use of KPutFmt() accordingly.
+    * Makefile.os4,misc: make Toolbar.mcc compile/link against newlib instead
+      of clib2 for OS4.
+
 2005-08-05  Gunther Nikl <gni@gecko.de>
 
     * mcc/library.c: Remove superfluous include statements.
@@ -15,7 +24,7 @@ $Source$
 2005-08-03  Jens Langner <Jens.Langner@light-speed.de>
 
     * Debug.c,h: fixed incorrect use of KPutFmt() on MorphOS machines in
-      accordance to the changes in TextEditor.mcc. Now our debug output show
+      accordance to the changes in TextEditor.mcc. Now our debug output should
       hopefully also work on MorphOS.
 
 #### v15.12 RELEASE ############################################################

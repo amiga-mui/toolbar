@@ -2,7 +2,7 @@
 
  Toolbar MCC - MUI Custom Class for Toolbar handling
  Copyright (C) 1997-2000 Benny Kjær Nielsen <floyd@amiga.dk>
- Copyright (C) 2004-2005 by Toolbar.mcc Open Source Team
+ Copyright (C) 2004-2006 by Toolbar.mcc Open Source Team
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
@@ -27,8 +27,13 @@
 #include <clib/alib_protos.h>
 #include <proto/utility.h>
 #include <proto/intuition.h>
+#include <proto/layers.h>
 #include <proto/muimaster.h>
 #include <proto/graphics.h>
+#include <proto/datatypes.h>
+
+#include <datatypes/pictureclass.h>
+
 
 // Other
 #include <libraries/mui.h>
@@ -38,34 +43,119 @@
 #include "Toolbar_mcc.h"
 #include "InstanceData.h"
 #include "ConfigValues.h"
-//#include "MinList.h"
 #include "Draw.h"
+#include "Debug.h"
 
 #define THREE_D     TRUE
 #define NOT_THREE_D FALSE
 
-/*
-TODO:
-Omskriv ->
-*/
+/// struct LayerHookMsg
+struct LayerHookMsg
+{
+  struct Layer *layer;
+  struct Rectangle bounds;
+  LONG offsetx;
+  LONG offsety;
+};
 
-VOID UpperFrame (struct RastPort *rport, UWORD MinX, UWORD MinY, UWORD MaxX,
-           UWORD MaxY, UWORD color)
+///
+/// struct BltHook
+struct BltHook
+{
+  struct Hook hook;
+  struct BitMap maskBitMap;
+  struct BitMap *srcBitMap;
+  LONG srcx,srcy;
+  LONG destx,desty;
+};
+
+///
+/// MyBltMaskBitMap()
+static void MyBltMaskBitMap(const struct BitMap *srcBitMap, LONG xSrc, LONG ySrc, struct BitMap *destBitMap, LONG xDest, LONG yDest, LONG xSize, LONG ySize, struct BitMap *maskBitMap)
+{
+  BltBitMap(srcBitMap,xSrc,ySrc,destBitMap, xDest, yDest, xSize, ySize, 0x99,~0,NULL);
+  BltBitMap(maskBitMap,xSrc,ySrc,destBitMap, xDest, yDest, xSize, ySize, 0xe2,~0,NULL);
+  BltBitMap(srcBitMap,xSrc,ySrc,destBitMap, xDest, yDest, xSize, ySize, 0x99,~0,NULL);
+}
+
+///
+/// BltMaskHook
+HOOKPROTO(BltMaskFunc, void, struct RastPort *rp, struct LayerHookMsg *msg)
+{
+  struct BltHook *h = (struct BltHook*)hook;
+
+  LONG width = msg->bounds.MaxX - msg->bounds.MinX+1;
+  LONG height = msg->bounds.MaxY - msg->bounds.MinY+1;
+  LONG offsetx = h->srcx + msg->offsetx - h->destx;
+  LONG offsety = h->srcy + msg->offsety - h->desty;
+
+  MyBltMaskBitMap(h->srcBitMap, offsetx, offsety, rp->BitMap, msg->bounds.MinX, msg->bounds.MinY, width, height, &h->maskBitMap);
+}
+MakeStaticHook(BltMaskHook, BltMaskFunc);
+
+///
+/// MyBltMaskBitMapRastPort()
+static void MyBltMaskBitMapRastPort(struct BitMap *srcBitMap, LONG xSrc, LONG ySrc, struct RastPort *destRP, LONG xDest, LONG yDest, LONG xSize, LONG ySize, ULONG minterm, APTR bltMask)
+{
+  ENTER();
+
+  if(GetBitMapAttr(srcBitMap, BMA_FLAGS) & BMF_INTERLEAVED)
+  {
+    LONG src_depth = GetBitMapAttr(srcBitMap, BMA_DEPTH);
+    struct Rectangle rect;
+    struct BltHook hook;
+
+    // Define the destination rectangle in the rastport
+    rect.MinX = xDest;
+    rect.MinY = yDest;
+    rect.MaxX = xDest + xSize - 1;
+    rect.MaxY = yDest + ySize - 1;
+
+    // Initialize the hook
+    InitHook(&hook.hook, BltMaskHook, NULL);
+    hook.srcBitMap = srcBitMap;
+    hook.srcx = xSrc;
+    hook.srcy = ySrc;
+    hook.destx = xDest;
+    hook.desty = yDest;
+
+    // Initialize a bitmap where all plane pointers points to the mask
+    InitBitMap(&hook.maskBitMap, src_depth, GetBitMapAttr(srcBitMap, BMA_WIDTH), GetBitMapAttr(srcBitMap, BMA_HEIGHT));
+    while(src_depth)
+    {
+      hook.maskBitMap.Planes[--src_depth] = bltMask;
+    }
+
+    // Blit onto the Rastport */
+    DoHookClipRects(&hook.hook, destRP, &rect);
+  }
+  else
+  {
+    BltMaskBitMapRastPort(srcBitMap, xSrc, ySrc, destRP, xDest, yDest, xSize, ySize, minterm, bltMask);
+  }
+
+  LEAVE();
+}
+
+///
+
+static VOID UpperFrame(struct RastPort *rport, UWORD MinX, UWORD MinY, UWORD MaxX,
+                UWORD MaxY, UWORD color)
 {
   SetAPen(rport, color);
   RectFill(rport, MinX, MinY, MaxX, MinY);
   RectFill(rport, MinX, MinY, MinX, MaxY);
 }
 
-VOID LowerFrame (struct RastPort *rport, UWORD MinX, UWORD MinY, UWORD MaxX,
-           UWORD MaxY, UWORD color)
+static VOID LowerFrame(struct RastPort *rport, UWORD MinX, UWORD MinY, UWORD MaxX,
+                       UWORD MaxY, UWORD color)
 {
   SetAPen(rport, color);
   RectFill(rport, MinX, MaxY, MaxX, MaxY);
   RectFill(rport, MaxX, MinY, MaxX, MaxY);
 }
 
-VOID DrawText (struct RastPort *rport, WORD x, WORD y, STRPTR text, char hotkey, UWORD textcolor, BOOL parse)
+static VOID DrawText(struct RastPort *rport, WORD x, WORD y, STRPTR text, char hotkey, UWORD textcolor, BOOL parse)
 {
   ULONG length = strlen(text);
   y += rport->TxBaseline;
@@ -118,13 +208,13 @@ VOID DrawText (struct RastPort *rport, WORD x, WORD y, STRPTR text, char hotkey,
   }
 }
 
-void Draw3DText (struct RastPort *rport, WORD x, WORD y, STRPTR text, char hotkey, UWORD textcolor, UWORD shadowcolor, BOOL parse)
+static void Draw3DText (struct RastPort *rport, WORD x, WORD y, STRPTR text, char hotkey, UWORD textcolor, UWORD shadowcolor, BOOL parse)
 {
   DrawText(rport, x+1, y+1, text, hotkey, shadowcolor, parse);
   DrawText(rport, x, y, text, hotkey, textcolor, parse);
 }
 
-VOID DrawButton(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj, BOOL selected, BOOL three_d)
+static VOID DrawButton(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj, BOOL selected, BOOL three_d)
 {
   // This routine depends heavily on selected being either 0 or 1.
   WORD x = tool->DstX, y  = tool->DstY;
@@ -144,7 +234,7 @@ VOID DrawButton(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj,
   if (data->BorderType == BORDERTYPE_OLD) {
     RectFill(rport,  x+1, y+1, x+data->ButtonWidth-1, y+data->ButtonHeight-1);
   } else if (data->BorderType == BORDERTYPE_OFF) {
-    get(obj, MUIA_Parent, &par);
+    get(obj, MUIA_Parent, (ULONG)&par);
     if (par) {
       get(par, MUIA_Background, &back);
       set(obj, MUIA_Background, back);
@@ -204,11 +294,15 @@ VOID DrawButton(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj,
 
   if(data->ToolImages)
   {
-    if(bitmap) {
-      if (mask && (data->BorderType != BORDERTYPE_OLD)) {
-        BltMaskBitMapRastPort((three_d ? data->GhostBM : bitmap), tool->SrcOffset, 0, rport, x+delta+selected, y+data->InnerSpace+2+selected, data->IconWidth, data->IconHeight, 0xE0, mask);
-      } else {
-        BltBitMapRastPort((three_d ? data->GhostBM : bitmap), tool->SrcOffset, 0, rport, x+delta+selected, y+data->InnerSpace+2+selected, data->IconWidth, data->IconHeight, 0xC0);
+    if(bitmap)
+    {
+      if(mask && (data->BorderType != BORDERTYPE_OLD))
+      {
+        MyBltMaskBitMapRastPort((three_d ? data->GhostBM : bitmap), tool->SrcOffset, 0, rport, x+delta+selected, y+data->InnerSpace+2+selected, data->IconWidth, data->IconHeight, 0xc0, mask);
+      }
+      else
+      {
+        BltBitMapRastPort((three_d ? data->GhostBM : bitmap), tool->SrcOffset, 0, rport, x+delta+selected, y+data->InnerSpace+2+selected, data->IconWidth, data->IconHeight, 0xc0);
       }
     }
     else
@@ -221,7 +315,7 @@ VOID DrawButton(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj,
   }
 }
 
-VOID DrawGhosted(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj, BOOL selected)
+static VOID DrawGhosted(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj, BOOL selected)
 {
   switch(data->GhostEffect)
   {
@@ -277,14 +371,14 @@ VOID DrawGhosted(struct TB_Element *tool, struct Toolbar_Data *data, Object *obj
   }
 }
 
-VOID DrawButtons(struct Toolbar_Data *data, Object *obj, BOOL complete)
+static VOID DrawButtons(struct Toolbar_Data *data, Object *obj, BOOL complete)
 {
   struct MUIP_Toolbar_Description *desc = data->Desc;
 
   Object *par;
   ULONG back;
 
-  get(obj, MUIA_Parent, &par);
+  get(obj, MUIA_Parent, (ULONG)&par);
   if (par) {
     get(par, MUIA_Background, &back);
     set(obj, MUIA_Background, back);

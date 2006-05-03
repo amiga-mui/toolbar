@@ -53,6 +53,7 @@
 #include "ConfigValues.h"
 #include "Draw.h" // TB_
 #include "muiextra.h"
+#include "Debug.h"
 
 #ifdef USE_IMAGEPOOL
 extern struct Library *ImagePoolBase;
@@ -80,23 +81,23 @@ VOID DumpKeyValues(struct Toolbar_Data *data)
 }
 #endif
 
-ULONG GetConfigItem(Object *obj, ULONG configitem, ULONG defaultsetting)
+static ULONG GetConfigItem(Object *obj, ULONG configitem, ULONG defaultsetting)
 {
   ULONG value;
   return( DoMethod(obj, MUIM_GetConfigItem, configitem, &value) ? *(ULONG *)value : defaultsetting);
 }
 
-ULONG MakeDark(ULONG color)
+static ULONG MakeDark(ULONG color)
 {
   return((color > 0x1a1a1a1a) ? color -= 0x1a1a1a1a : 0x000000);
 }
 
-ULONG MakeBright(ULONG color)
+static ULONG MakeBright(ULONG color)
 {
   return((color < 0xffffffff-0x1a1a1a1a) ? color += 0x1a1a1a1a : 0xffffffff);
 }
 
-LONG AllocShineShadowPen(struct ColorMap *cm, ULONG *color, BOOL darker)
+static LONG AllocShineShadowPen(struct ColorMap *cm, ULONG *color, BOOL darker)
 {
   ULONG r, g, b;
 
@@ -107,7 +108,7 @@ LONG AllocShineShadowPen(struct ColorMap *cm, ULONG *color, BOOL darker)
   return(ObtainBestPenA(cm, r, g, b, NULL));
 }
 
-BOOL ReportSizeError(char *cause, Object *app)
+static BOOL ReportSizeError(char *cause, Object *app)
 {
   return((BOOL)!MUI_Request (app, NULL, 0, NULL, "_Continue|_Fail",
         "The width and/or height of the %s image\n"
@@ -117,17 +118,13 @@ BOOL ReportSizeError(char *cause, Object *app)
         "\nRead the Toolbar.mcc documentation for more information.", cause));
 }
 
-BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, struct BitMap **dest_bm, PLANEPTR *dest_mask,
-                      UNUSED struct IP_Image **ip_image, Object **dt_object, UWORD *width, UWORD *height, LONG *trans)
+static BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, struct BitMap **dest_bm, PLANEPTR *dest_mask,
+                             UNUSED struct IP_Image **ip_image, Object **dt_object, UWORD *width, UWORD *height, LONG *trans)
 {
   BOOL result = FALSE;
   Object *o = NULL;
 
-  /* To block any dos-requesters */
-/*  struct Process *myproc = (struct Process *)FindTask(NULL);
-  APTR oldwindowptr = myproc->pr_WindowPtr;
-  myproc->pr_WindowPtr = (APTR)-1;
-*/
+  ENTER();
 
   switch(data->ImageType)
   {
@@ -145,8 +142,8 @@ BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, str
           ULONG max_length = strlen(data->Path)+strlen((STRPTR)src_data)+2; // 1 til '\0' og 1 til evt. '/'
           if((buffer = AllocVec(max_length*sizeof(char), MEMF_CLEAR)))
           {
-            strcpy(buffer, data->Path);
-            if(AddPart((unsigned char *)buffer, (STRPTR)src_data, max_length))
+            strlcpy(buffer, data->Path, max_length*sizeof(char));
+            if(AddPart(buffer, (STRPTR)src_data, max_length))
               src_data = buffer;
           }
         }
@@ -176,11 +173,19 @@ BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, str
 
       if(!result)
       { 
-        *dt_object = o = NewDTObject(src_data,  DTA_SourceType, sourcetype,
-                              DTA_GroupID,        GID_PICTURE,
-                              OBP_Precision,        data->Precision,
-                              PDTA_DestMode,        PMODE_V43,
-                              TAG_DONE);  
+        // tell DOS not to bother us with requesters
+        struct Process *myproc = (struct Process *)FindTask(NULL);
+        APTR oldwindowptr = myproc->pr_WindowPtr;
+        myproc->pr_WindowPtr = (APTR)-1;
+
+        *dt_object = o = NewDTObject(src_data,
+                                     DTA_SourceType, sourcetype,
+                                     DTA_GroupID,    GID_PICTURE,
+                                     OBP_Precision,  data->Precision,
+                                     PDTA_DestMode,  PMODE_V43,
+                                     TAG_DONE);
+
+        myproc->pr_WindowPtr = oldwindowptr; // restore window pointer.
       }
       FreeVec(buffer);
     }
@@ -193,38 +198,49 @@ BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, str
 
   if(o)
   {
+    struct BitMapHeader *bmhd = NULL;
 
-    struct BitMapHeader *bmhd;
-    get(o, PDTA_BitMapHeader, &bmhd);
+    GetDTAttrs(o, PDTA_BitMapHeader, &bmhd, TAG_DONE);
+
     if(bmhd)
     {
-      ULONG *cr;
+      ULONG *cr = NULL;
       struct FrameInfo fri;
 
       memset(&fri, 0, sizeof(struct FrameInfo));
 
-      if(get(o ,PDTA_CRegs, &cr))
+      if(GetDTAttrs(o, PDTA_CRegs, &cr, TAG_DONE))
       {
         ULONG color = bmhd->bmh_Transparent*3;
         *trans = ObtainBestPenA(_screen(obj)->ViewPort.ColorMap, cr[color], cr[color+1], cr[color+2], NULL);
       }
-      set(o, PDTA_Screen,           _screen(obj));
-      set(o, PDTA_FreeSourceBitMap, TRUE);
-      set(o, PDTA_UseFriendBitMap,  TRUE);
+
+      SetAttrs(o, PDTA_Screen,           _screen(obj),
+                  PDTA_FreeSourceBitMap, TRUE,
+                  PDTA_UseFriendBitMap,  TRUE,
+                  TAG_DONE);
+
       DoMethod(o, DTM_FRAMEBOX, NULL, &fri, &fri, sizeof(struct FrameInfo), 0);
 
-      if (fri.fri_Dimensions.Depth>0)
+      if(fri.fri_Dimensions.Depth > 0)
       {
-        if (DoMethod(o, DTM_PROCLAYOUT, NULL, 1L))
+        if(DoMethod(o, DTM_PROCLAYOUT, NULL, 1L))
         {
+          *dest_bm = NULL;
+
           GetDTAttrs(o, PDTA_DestBitMap, dest_bm, TAG_DONE);
           if(!*dest_bm)
             GetDTAttrs(o, PDTA_BitMap, dest_bm, TAG_DONE);
+
           if(*dest_bm)
           {
             *width = bmhd->bmh_Width;
             *height = bmhd->bmh_Height;
-            get(o, PDTA_MaskPlane, dest_mask);
+
+            *dest_mask = NULL;
+            GetDTAttrs(o, PDTA_MaskPlane, dest_mask, TAG_DONE);
+            D(DBF_STARTUP, "dest_mask: %lx %lx", dest_mask, *dest_mask);
+
             result = TRUE;
           }
         }
@@ -232,6 +248,7 @@ BOOL ProcessImageFile(Object *obj, struct Toolbar_Data *data, APTR src_data, str
     }
   }
 
+  RETURN(result);
   return(result);
 }
 

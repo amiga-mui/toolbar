@@ -63,10 +63,12 @@ static const STRPTR used_classesP[] = { "Toolbar.mcp", NULL };
 struct Library *DataTypesBase = NULL;
 struct Library *KeymapBase    = NULL;
 struct Library *DiskfontBase  = NULL;
+struct Library *LayersBase    = NULL;
 #if defined(__amigaos4__)
 struct DataTypesIFace *IDataTypes = NULL;
 struct KeymapIFace *IKeymap       = NULL;
 struct DiskfontIFace *IDiskfont   = NULL;
+struct LayersIFace *ILayers       = NULL;
 #endif
 
 #ifdef USE_IMAGEPOOL
@@ -87,13 +89,21 @@ BOOL PreClassInitFunc(void)
       if((DiskfontBase = OpenLibrary("diskfont.library", 37L)) &&
          GETINTERFACE(IDiskfont, DiskfontBase))
       {
-        #ifdef USE_IMAGEPOOL
-        // ImagePool is no MUST
-        if((ImagePoolBase = OpenLibrary("imagepool.library", 37L)) &&
-           GETINTERFACE(IImagePool, ImagePoolBase)) { }
-        #endif
+        if((LayersBase = OpenLibrary("layers.library", 39L)) &&
+           GETINTERFACE(ILayers, LayersBase))
+        {
+          #ifdef USE_IMAGEPOOL
+          // ImagePool is no MUST
+          if((ImagePoolBase = OpenLibrary("imagepool.library", 37L)) &&
+             GETINTERFACE(IImagePool, ImagePoolBase)) { }
+          #endif
 
-        return TRUE;
+          return TRUE;
+        }
+
+        DROPINTERFACE(IDiskfont);
+        CloseLibrary(DiskfontBase);
+        DiskfontBase = NULL;
       }
 
       DROPINTERFACE(IKeymap);
@@ -115,6 +125,7 @@ VOID PostClassExitFunc(void)
   if(ImagePoolBase) { DROPINTERFACE(IImagePool); CloseLibrary(ImagePoolBase); ImagePoolBase = NULL; }
   #endif
 
+  if(LayersBase)    { DROPINTERFACE(ILayers);    CloseLibrary(LayersBase);    LayersBase    = NULL; }
   if(DiskfontBase)  { DROPINTERFACE(IDiskfont);  CloseLibrary(DiskfontBase);  DiskfontBase  = NULL; }
   if(KeymapBase)    { DROPINTERFACE(IKeymap);    CloseLibrary(KeymapBase);    KeymapBase    = NULL; }
   if(DataTypesBase) { DROPINTERFACE(IDataTypes); CloseLibrary(DataTypesBase); DataTypesBase = NULL; }
